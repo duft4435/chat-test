@@ -12,6 +12,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 const rooms = {};
 
 wss.on('connection', ws => {
+  console.log('🔌 Новый клиент подключён');
+
   ws.on('message', message => {
     try {
       const data = JSON.parse(message.toString());
@@ -22,13 +24,20 @@ wss.on('connection', ws => {
 
       if (data.private && data.to) {
         msg.private = true;
+        
         wss.clients.forEach(client => {
-          if (client.readyState === WebSocket.OPEN && client !== ws) {
+          if (
+            client.readyState === WebSocket.OPEN &&
+            client !== ws &&
+            client.userName === data.to
+          ) {
             client.send(JSON.stringify(msg));
           }
         });
         return;
       }
+
+      ws.userName = data.name;
 
       rooms[room].push(msg);
       if (rooms[room].length > 50) rooms[room] = rooms[room].slice(-50);
@@ -39,12 +48,16 @@ wss.on('connection', ws => {
         }
       });
     } catch (err) {
-      console.error('Ошибка обработки сообщения:', err);
+      console.error('❌ Ошибка обработки сообщения:', err);
     }
+  });
+
+  ws.on('close', () => {
+    console.log('❎ Клиент отключился');
   });
 });
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`✅ Сервер работает на порту ${PORT}`);
 });
