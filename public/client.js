@@ -1,5 +1,5 @@
 const protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-const socket = new WebSocket(`${protocol}://${location.host}`);
+const socket = new WebSocket(`wss://${window.location.host}`);
 
 const chat = document.getElementById('chat');
 const input = document.getElementById('messageInput');
